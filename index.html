@@ -1,0 +1,2209 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f3e8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="认识时间">
+  <title>认识时间互动练习</title>
+  <style>
+    :root {
+      --bg: #f7f3e8;
+      --surface: #fffdf7;
+      --surface-strong: #ffffff;
+      --ink: #243040;
+      --muted: #667085;
+      --line: #d9d2c3;
+      --hour: #f59e0b;
+      --minute: #0ea5a3;
+      --second: #e84a5f;
+      --blue: #3b82f6;
+      --green: #22a06b;
+      --shadow: 0 18px 40px rgba(36, 48, 64, 0.12);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
+      color: var(--ink);
+      font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.18)),
+        var(--bg);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      touch-action: manipulation;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+      transform: none;
+    }
+
+    .app {
+      width: min(1200px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: 10px 0 14px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .title-block p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .mode-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.64);
+    }
+
+    .mode-tab {
+      min-width: 78px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--ink);
+      background: transparent;
+      transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .mode-tab[aria-pressed="true"] {
+      color: white;
+      background: #2563eb;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24);
+    }
+
+    .mode-tab:focus-visible,
+    .control-button:focus-visible,
+    .choice-button:focus-visible,
+    .icon-button:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.35);
+      outline-offset: 2px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(360px, 1.02fr) minmax(360px, 0.98fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .clock-panel,
+    .mode-panel,
+    .lesson-strip,
+    .thinking-box {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .clock-panel {
+      padding: 12px;
+    }
+
+    .clock-wrap {
+      display: grid;
+      place-items: center;
+      height: clamp(280px, 45vh, 330px);
+      min-height: 0;
+      padding: 8px;
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.96) 0 57%, rgba(235, 242, 255, 0.74) 58% 100%);
+      border: 1px solid #e1e7f2;
+    }
+
+    .clock {
+      width: min(100%, 320px);
+      aspect-ratio: 1;
+      display: block;
+      overflow: visible;
+    }
+
+    .clock-face {
+      fill: #fffaf0;
+      stroke: #1f2937;
+      stroke-width: 3;
+    }
+
+    .tick-small {
+      stroke: #a9b1bd;
+      stroke-width: 1.2;
+      stroke-linecap: round;
+    }
+
+    .tick-big {
+      stroke: #1f2937;
+      stroke-width: 3.6;
+      stroke-linecap: round;
+    }
+
+    .clock-number {
+      font-size: 22px;
+      font-weight: 800;
+      fill: #1f2937;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .minute-number {
+      font-size: 8.5px;
+      font-weight: 700;
+      fill: #6b7280;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .hand {
+      stroke-linecap: round;
+      transform-origin: 0 0;
+      transition: transform 240ms ease;
+    }
+
+    .hand-hour {
+      stroke: var(--hour);
+      stroke-width: 9;
+    }
+
+    .hand-minute {
+      stroke: var(--minute);
+      stroke-width: 6;
+    }
+
+    .hand-second {
+      stroke: var(--second);
+      stroke-width: 2.8;
+    }
+
+    .hand-tail {
+      opacity: 0.42;
+    }
+
+    .center-dot {
+      fill: #1f2937;
+      stroke: #fff;
+      stroke-width: 3;
+    }
+
+    .marker-minute {
+      fill: var(--minute);
+      stroke: white;
+      stroke-width: 3;
+    }
+
+    .marker-second {
+      fill: var(--second);
+      stroke: white;
+      stroke-width: 2;
+    }
+
+    .readout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .time-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: #213147;
+      color: #fff;
+    }
+
+    .digital-time {
+      font-size: 1.65rem;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .speak-button {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .speak-button svg {
+      width: 23px;
+      height: 23px;
+    }
+
+    .thought {
+      padding: 10px 12px;
+      border-left: 5px solid var(--blue);
+      border-radius: var(--radius);
+      background: #eef6ff;
+      font-size: 0.94rem;
+      line-height: 1.48;
+    }
+
+    .thought strong {
+      color: #174ea6;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: grid;
+      gap: 4px;
+      min-height: 60px;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius);
+      background: var(--surface-strong);
+    }
+
+    .legend-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+    }
+
+    .color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .hour-dot {
+      background: var(--hour);
+    }
+
+    .minute-dot {
+      background: var(--minute);
+    }
+
+    .second-dot {
+      background: var(--second);
+    }
+
+    .legend-text {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.32;
+    }
+
+    .side {
+      display: grid;
+      gap: 12px;
+    }
+
+    .lesson-strip {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding: 10px;
+      box-shadow: none;
+    }
+
+    .fact {
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: var(--radius);
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .fact-badge {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: white;
+      background: #344054;
+      font-size: 0.9rem;
+    }
+
+    .mode-panel,
+    .thinking-box {
+      padding: 12px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 1.12rem;
+      letter-spacing: 0;
+    }
+
+    .status-pill {
+      min-width: 68px;
+      text-align: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: #155e3b;
+      background: #dcfce7;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .slider-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 70px minmax(120px, 1fr) 58px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-row label {
+      font-weight: 800;
+    }
+
+    .slider-row output {
+      display: inline-grid;
+      place-items: center;
+      min-height: 32px;
+      border-radius: 6px;
+      background: #f3f4f6;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      min-height: 34px;
+      width: 100%;
+      background: transparent;
+      accent-color: #2563eb;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #dbeafe;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 24px;
+      height: 24px;
+      margin-top: -8px;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      background: #2563eb;
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.28);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #dbeafe;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      background: #2563eb;
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.28);
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .control-button {
+      min-height: 40px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      color: white;
+      background: #2563eb;
+      font-weight: 900;
+      line-height: 1.25;
+      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+    }
+
+    .control-button:hover,
+    .choice-button:hover,
+    .icon-button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.02);
+    }
+
+    .control-button.hour {
+      background: #c27705;
+    }
+
+    .control-button.minute {
+      background: #0f766e;
+    }
+
+    .control-button.second {
+      background: #c93550;
+    }
+
+    .control-button.secondary {
+      color: var(--ink);
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .mode-panel {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mode-panel[hidden] {
+      display: none;
+    }
+
+    .challenge-top {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border-radius: var(--radius);
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .question {
+      margin: 0;
+      font-size: 1.08rem;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choice-button {
+      min-height: 42px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .choice-button.correct {
+      color: #064e3b;
+      border-color: #34d399;
+      background: #d1fae5;
+    }
+
+    .choice-button.wrong {
+      color: #7f1d1d;
+      border-color: #fca5a5;
+      background: #fee2e2;
+    }
+
+    .feedback {
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .thinking-box {
+      display: grid;
+      gap: 8px;
+    }
+
+    .thinking-box textarea {
+      width: 100%;
+      min-height: 68px;
+      resize: vertical;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius);
+      padding: 12px;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+
+    .icon-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .icon-button {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      color: #1f2937;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      font-weight: 850;
+    }
+
+    .icon-button svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .toggle-grid,
+    .level-grid,
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .toggle-button[aria-pressed="true"],
+    .level-button.active {
+      color: #064e3b;
+      border-color: #86efac;
+      background: #dcfce7;
+    }
+
+    .level-button {
+      min-height: 44px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      font-weight: 900;
+    }
+
+    .mini-stat {
+      display: grid;
+      gap: 3px;
+      min-height: 54px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .mini-stat strong {
+      font-size: 1.22rem;
+      line-height: 1;
+    }
+
+    .mistake-list {
+      min-height: 68px;
+      padding: 10px;
+      border: 1px dashed #cbd5e1;
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: #f8fafc;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .mistake-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      color: #334155;
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .legacy-hidden {
+      display: none !important;
+    }
+
+    .quiz-prompt {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: #eef6ff;
+      border: 1px solid #bfdbfe;
+      color: #174ea6;
+      font-weight: 900;
+      line-height: 1.42;
+    }
+
+    body[data-mode="teacher"] [data-panel]:not([data-panel="teacher"]),
+    body[data-mode="free"] [data-panel]:not([data-panel="free"]),
+    body[data-mode="practice"] [data-panel]:not([data-panel="practice"]),
+    body[data-mode="mistakes"] [data-panel]:not([data-panel="mistakes"]) {
+      display: none;
+    }
+
+    body[data-mode="practice"] .readout,
+    body[data-mode="practice"] .legend,
+    body[data-mode="mistakes"] .readout,
+    body[data-mode="mistakes"] .legend {
+      display: none;
+    }
+
+    body.answer-hidden .readout {
+      display: none;
+    }
+
+    body.practice-active .quiz-prompt,
+    body[data-mode="practice"] .quiz-prompt,
+    body[data-mode="mistakes"] .quiz-prompt {
+      display: block;
+    }
+
+    body.hide-hour #hourHand,
+    body.hide-minute #minuteHand,
+    body.hide-minute #minuteMarker,
+    body.hide-second #secondHand,
+    body.hide-second #secondMarker {
+      opacity: 0.08;
+    }
+
+    @media (max-width: 920px) {
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .mode-tabs {
+        width: 100%;
+      }
+
+      .mode-tab {
+        flex: 1 1 96px;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .clock-wrap {
+        height: auto;
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 620px) {
+      body {
+        min-height: 100svh;
+        background: var(--bg);
+      }
+
+      .app {
+        width: 100%;
+        padding: max(8px, env(safe-area-inset-top)) 10px max(12px, env(safe-area-inset-bottom));
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        gap: 8px;
+        margin: calc(-1 * max(8px, env(safe-area-inset-top))) -10px 8px;
+        padding: max(8px, env(safe-area-inset-top)) 10px 8px;
+        border-bottom: 1px solid rgba(217, 210, 195, 0.78);
+        background: rgba(247, 243, 232, 0.96);
+        backdrop-filter: blur(12px);
+      }
+
+      .title-block h1 {
+        font-size: 1.28rem;
+        line-height: 1.18;
+      }
+
+      .title-block p {
+        display: none;
+      }
+
+      .mode-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+        width: 100%;
+        padding: 4px;
+      }
+
+      .mode-tab {
+        min-width: 0;
+        min-height: 44px;
+        padding: 7px 6px;
+        font-weight: 900;
+      }
+
+      .workspace,
+      .side {
+        gap: 10px;
+      }
+
+      .clock-panel,
+      .mode-panel,
+      .thinking-box,
+      .lesson-strip {
+        padding: 10px;
+        box-shadow: 0 10px 24px rgba(36, 48, 64, 0.1);
+      }
+
+      .clock-wrap {
+        height: min(76vw, 320px);
+        min-height: 248px;
+        padding: 6px;
+      }
+
+      .clock {
+        width: min(100%, calc(100vw - 58px), 312px);
+      }
+
+      .readout {
+        gap: 7px;
+        margin-top: 8px;
+      }
+
+      .time-line {
+        flex-direction: row;
+        align-items: center;
+        padding: 9px 10px;
+      }
+
+      .digital-time {
+        font-size: 1.32rem;
+      }
+
+      .speak-button {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+      }
+
+      .thought {
+        max-height: 9.4em;
+        overflow: auto;
+        padding: 9px 10px;
+        font-size: 0.88rem;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .legend {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .legend-item {
+        min-height: 56px;
+        padding: 7px 6px;
+      }
+
+      .legend-label {
+        justify-content: center;
+        gap: 5px;
+        font-size: 0.9rem;
+      }
+
+      .legend-text {
+        font-size: 0.76rem;
+        text-align: center;
+      }
+
+      .color-dot {
+        width: 11px;
+        height: 11px;
+      }
+
+      .lesson-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .fact {
+        min-height: 48px;
+        padding: 7px;
+        gap: 6px;
+        font-size: 0.86rem;
+      }
+
+      .fact-badge {
+        width: 26px;
+        height: 26px;
+        font-size: 0.78rem;
+      }
+
+      .slider-row {
+        grid-template-columns: 42px minmax(0, 1fr) 44px;
+        gap: 8px;
+      }
+
+      .slider-row output {
+        min-height: 36px;
+      }
+
+      input,
+      textarea {
+        font-size: 16px;
+      }
+
+      .button-grid {
+        grid-template-columns: 1fr;
+        gap: 7px;
+      }
+
+      .demo-grid,
+      .choice-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .control-button,
+      .choice-button,
+      .icon-button {
+        min-height: 46px;
+      }
+
+      .control-button,
+      .choice-button {
+        padding: 8px;
+        font-size: 0.94rem;
+      }
+
+      .section-title {
+        margin-bottom: 8px;
+      }
+
+      .section-title h2 {
+        font-size: 1rem;
+      }
+
+      .challenge-top {
+        padding: 9px;
+      }
+
+      .question {
+        font-size: 0.98rem;
+      }
+
+      .feedback {
+        font-size: 0.9rem;
+      }
+
+      .thinking-box textarea {
+        min-height: 82px;
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      .icon-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      body[data-mode="practice"] .clock-wrap,
+      body[data-mode="mistakes"] .clock-wrap {
+        height: min(84vw, 330px);
+      }
+
+      body[data-mode="practice"] .quiz-prompt,
+      body[data-mode="mistakes"] .quiz-prompt {
+        margin-top: 8px;
+        padding: 9px 10px;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 370px) {
+      .app {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .clock-wrap {
+        min-height: 230px;
+      }
+
+      .clock {
+        width: min(100%, calc(100vw - 52px), 292px);
+      }
+
+      .demo-grid,
+      .choice-grid,
+      .icon-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+      .app {
+        width: min(100% - 16px, 1180px);
+        padding: 6px 0;
+      }
+
+      .topbar {
+        position: static;
+        flex-direction: row;
+        margin: 0 0 6px;
+        padding: 0;
+        border-bottom: 0;
+        background: transparent;
+        backdrop-filter: none;
+      }
+
+      .title-block p {
+        display: none;
+      }
+
+      .workspace {
+        grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr);
+      }
+
+      .clock-wrap {
+        height: calc(100svh - 92px);
+        min-height: 230px;
+      }
+
+      .clock {
+        width: min(100%, calc(100svh - 112px), 300px);
+      }
+
+      .legend,
+      body[data-mode="practice"] .quiz-prompt,
+      body[data-mode="mistakes"] .quiz-prompt {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body data-mode="teacher">
+  <div class="app">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>认识时间互动练习</h1>
+        <p>看钟面、拨指针、读时间，说清自己的想法。</p>
+      </div>
+      <nav class="mode-tabs" aria-label="练习模式">
+        <button class="mode-tab" type="button" data-mode="teacher" aria-pressed="true">教师演示</button>
+        <button class="mode-tab" type="button" data-mode="free" aria-pressed="false">自由拨钟</button>
+        <button class="mode-tab" type="button" data-mode="practice" aria-pressed="false">分层闯关</button>
+        <button class="mode-tab" type="button" data-mode="mistakes" aria-pressed="false">错题再练</button>
+      </nav>
+    </header>
+
+    <main class="workspace">
+      <section class="clock-panel" aria-label="互动钟面">
+        <div class="clock-wrap">
+          <svg class="clock" viewBox="-160 -160 320 320" role="img" aria-labelledby="clockTitle clockDesc">
+            <title id="clockTitle">一个可以互动的钟面</title>
+            <desc id="clockDesc">短针表示时，长针表示分，细针表示秒。</desc>
+            <circle class="clock-face" cx="0" cy="0" r="148"></circle>
+            <g id="smallTicks"></g>
+            <g id="minuteNumbers"></g>
+            <g id="bigTicks"></g>
+            <g id="hourNumbers"></g>
+            <circle id="minuteMarker" class="marker-minute" cx="0" cy="-126" r="7"></circle>
+            <circle id="secondMarker" class="marker-second" cx="0" cy="-140" r="5"></circle>
+            <g id="hourHand" class="hand">
+              <line class="hand-tail hand-hour" x1="0" y1="15" x2="0" y2="0"></line>
+              <line class="hand-hour" x1="0" y1="0" x2="0" y2="-70"></line>
+            </g>
+            <g id="minuteHand" class="hand">
+              <line class="hand-tail hand-minute" x1="0" y1="20" x2="0" y2="0"></line>
+              <line class="hand-minute" x1="0" y1="0" x2="0" y2="-106"></line>
+            </g>
+            <g id="secondHand" class="hand">
+              <line class="hand-tail hand-second" x1="0" y1="24" x2="0" y2="0"></line>
+              <line class="hand-second" x1="0" y1="0" x2="0" y2="-124"></line>
+            </g>
+            <circle class="center-dot" cx="0" cy="0" r="8"></circle>
+          </svg>
+        </div>
+
+        <div id="quizPrompt" class="quiz-prompt" aria-live="polite">挑战模式已隐藏答案。请只看钟面上的短针、长针和细针来判断时间。</div>
+
+        <div class="readout">
+          <div class="time-line">
+            <div>
+              <div>现在钟面上是</div>
+              <div id="digitalTime" class="digital-time">03:15:20</div>
+            </div>
+            <button id="speakBtn" class="speak-button" type="button" aria-label="朗读当前时间" title="朗读">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"></path>
+                <path d="M16.2 8.1a5 5 0 0 1 0 7.8M18.8 5.6a8.7 8.7 0 0 1 0 12.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+          </div>
+          <div id="thought" class="thought"></div>
+        </div>
+
+        <div class="legend" aria-label="指针说明">
+          <div class="legend-item">
+            <div class="legend-label"><span class="color-dot hour-dot"></span>时针</div>
+            <div class="legend-text">短短的，走一大格是 1 时。</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-label"><span class="color-dot minute-dot"></span>分针</div>
+            <div class="legend-text">长长的，走一小格是 1 分。</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-label"><span class="color-dot second-dot"></span>秒针</div>
+            <div class="legend-text">细细的，走一小格是 1 秒。</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="side">
+        <section class="lesson-strip" aria-label="时间关系">
+          <div class="fact"><span class="fact-badge">时</span><span>1 时 = 60 分</span></div>
+          <div class="fact"><span class="fact-badge">分</span><span>1 分 = 60 秒</span></div>
+          <div class="fact"><span class="fact-badge">大格</span><span>时针走 1 大格是 1 时</span></div>
+          <div class="fact"><span class="fact-badge">小格</span><span>分针、秒针走 1 小格各表示 1 个单位</span></div>
+        </section>
+
+        <section class="mode-panel teacher-panel" data-panel="teacher" aria-label="教师演示">
+          <div class="section-title">
+            <h2>教师演示</h2>
+            <span id="runStatus" class="status-pill">已停下</span>
+          </div>
+          <div class="toggle-grid" aria-label="演示开关">
+            <button class="icon-button toggle-button" id="answerToggleBtn" type="button" aria-pressed="true">隐藏答案</button>
+            <button class="icon-button toggle-button" id="hourHandToggleBtn" type="button" aria-pressed="true">时针</button>
+            <button class="icon-button toggle-button" id="minuteHandToggleBtn" type="button" aria-pressed="true">分针</button>
+            <button class="icon-button toggle-button" id="secondHandToggleBtn" type="button" aria-pressed="true">秒针</button>
+          </div>
+          <div class="demo-grid">
+            <button class="control-button secondary" id="demoSecondBtn" type="button">秒针走一圈</button>
+            <button class="control-button secondary" id="demoMinuteBtn" type="button">分针走一圈</button>
+            <button class="control-button secondary" id="liveBtn" type="button">真实走时</button>
+            <button class="control-button secondary" id="resetBtn" type="button">回到 3:15:20</button>
+          </div>
+          <div id="teacherFeedback" class="feedback" aria-live="polite">可隐藏答案或某根指针，分步讲清时、分、秒。</div>
+        </section>
+
+        <section class="mode-panel free-panel" data-panel="free" aria-label="自由拨钟">
+          <div class="section-title">
+            <h2>自由拨钟</h2>
+            <span class="status-pill">造题</span>
+          </div>
+          <div class="slider-group">
+            <div class="slider-row">
+              <label for="hourRange">时</label>
+              <input id="hourRange" type="range" min="1" max="12" step="1" value="3">
+              <output id="hourOut" for="hourRange">3</output>
+            </div>
+            <div class="slider-row">
+              <label for="minuteRange">分</label>
+              <input id="minuteRange" type="range" min="0" max="59" step="1" value="15">
+              <output id="minuteOut" for="minuteRange">15</output>
+            </div>
+            <div class="slider-row">
+              <label for="secondRange">秒</label>
+              <input id="secondRange" type="range" min="0" max="59" step="1" value="20">
+              <output id="secondOut" for="secondRange">20</output>
+            </div>
+          </div>
+          <div class="button-grid">
+            <button class="control-button hour" id="addHourBtn" type="button">时针走 1 大格</button>
+            <button class="control-button minute" id="addMinuteBtn" type="button">分针走 1 小格</button>
+            <button class="control-button second" id="addSecondBtn" type="button">秒针走 1 小格</button>
+          </div>
+          <div class="demo-grid">
+            <button class="control-button secondary" id="makeFreeQuestionBtn" type="button">生成题目</button>
+            <button class="control-button secondary" id="showFreeAnswerBtn" type="button">显示答案</button>
+          </div>
+          <div id="freeQuestionArea" class="challenge-top hidden" aria-label="自由拨钟题目">
+            <p class="question">看左边钟面，选出正确时间。</p>
+            <div id="freeChoices" class="choice-grid"></div>
+          </div>
+          <div id="freeFeedback" class="feedback" aria-live="polite">拨一个时间后，可以生成题目让学生回答。</div>
+        </section>
+
+        <section class="mode-panel practice-panel" data-panel="practice" aria-label="分层闯关">
+          <div class="section-title">
+            <h2>分层闯关</h2>
+            <span id="progressPill" class="status-pill">0/5</span>
+          </div>
+          <div class="level-grid" aria-label="关卡选择">
+            <button class="level-button active" type="button" data-level="hour">整时</button>
+            <button class="level-button" type="button" data-level="minute">几时几分</button>
+            <button class="level-button" type="button" data-level="second">时分秒</button>
+            <button class="level-button" type="button" data-level="tricky">易错题</button>
+          </div>
+          <div class="summary-grid" aria-label="练习统计">
+            <div class="mini-stat"><span>答对</span><strong id="correctCount">0</strong></div>
+            <div class="mini-stat"><span>正确率</span><strong id="accuracyText">0%</strong></div>
+            <div class="mini-stat"><span>错题</span><strong id="mistakeCount">0</strong></div>
+          </div>
+          <div id="practiceQuestionArea" class="challenge-top">
+            <p id="practiceQuestionText" class="question">选择一个关卡，点击开始练习。</p>
+            <div id="practiceChoices" class="choice-grid"></div>
+            <div id="practiceFeedback" class="feedback" aria-live="polite">每轮 5 题，答题前会隐藏答案。</div>
+          </div>
+          <div class="demo-grid">
+            <button class="control-button secondary" id="startPracticeBtn" type="button">开始练习</button>
+            <button class="control-button secondary" id="nextQuestionBtn" type="button" disabled>下一题</button>
+            <button class="control-button secondary" id="showPracticeAnswerBtn" type="button" disabled>看答案</button>
+            <button class="control-button secondary" id="restartPracticeBtn" type="button">重来一轮</button>
+          </div>
+        </section>
+
+        <section class="mode-panel mistakes-panel" data-panel="mistakes" aria-label="错题再练">
+          <div class="section-title">
+            <h2>错题再练</h2>
+            <span id="mistakePill" class="status-pill">0题</span>
+          </div>
+          <div id="mistakeList" class="mistake-list">这轮没有错题，继续保持！</div>
+          <div id="mistakePracticeArea" class="challenge-top hidden">
+            <p id="mistakeQuestionText" class="question">看左边钟面，重新选择正确时间。</p>
+            <div id="mistakeChoices" class="choice-grid"></div>
+          </div>
+          <div class="demo-grid">
+            <button class="control-button secondary" id="startMistakesBtn" type="button">错题再练</button>
+            <button class="control-button secondary" id="clearMistakesBtn" type="button">清空错题</button>
+          </div>
+          <div id="mistakeFeedback" class="feedback" aria-live="polite">错题会在本次页面使用期间保留。</div>
+        </section>
+
+        <section class="thinking-box" aria-label="我的想法">
+          <label for="thinkingText"><strong>我的想法</strong></label>
+          <textarea id="thinkingText">我先看短短的时针，再看长长的分针，最后看细细的秒针。</textarea>
+          <div class="icon-row">
+            <button id="fillThinkingBtn" class="icon-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+              </svg>
+              填入想法
+            </button>
+            <button id="readThinkingBtn" class="icon-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"></path>
+                <path d="M16.5 9.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+              读我的想法
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+    <div class="legacy-hidden" aria-hidden="true">
+      <div id="choices"></div>
+      <div id="feedback"></div>
+      <button id="newQuizBtn" type="button"></button>
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_SECONDS = 12 * 60 * 60;
+    const state = {
+      totalSeconds: 3 * 3600 + 15 * 60 + 20,
+      quizAnswer: null,
+      timer: null,
+      live: false,
+      currentMode: "learn",
+      handAngles: {
+        hour: null,
+        minute: null,
+        second: null
+      }
+    };
+
+    const els = {
+      smallTicks: document.getElementById("smallTicks"),
+      bigTicks: document.getElementById("bigTicks"),
+      hourNumbers: document.getElementById("hourNumbers"),
+      minuteNumbers: document.getElementById("minuteNumbers"),
+      hourHand: document.getElementById("hourHand"),
+      minuteHand: document.getElementById("minuteHand"),
+      secondHand: document.getElementById("secondHand"),
+      minuteMarker: document.getElementById("minuteMarker"),
+      secondMarker: document.getElementById("secondMarker"),
+      digitalTime: document.getElementById("digitalTime"),
+      thought: document.getElementById("thought"),
+      hourRange: document.getElementById("hourRange"),
+      minuteRange: document.getElementById("minuteRange"),
+      secondRange: document.getElementById("secondRange"),
+      hourOut: document.getElementById("hourOut"),
+      minuteOut: document.getElementById("minuteOut"),
+      secondOut: document.getElementById("secondOut"),
+      runStatus: document.getElementById("runStatus"),
+      choices: document.getElementById("choices"),
+      feedback: document.getElementById("feedback"),
+      thinkingText: document.getElementById("thinkingText"),
+      fillThinkingBtn: document.getElementById("fillThinkingBtn")
+    };
+
+    function pad(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function normalize(seconds) {
+      return ((seconds % TOTAL_SECONDS) + TOTAL_SECONDS) % TOTAL_SECONDS;
+    }
+
+    function partsFromTotal(totalSeconds = state.totalSeconds) {
+      const safe = normalize(totalSeconds);
+      const rawHour = Math.floor(safe / 3600);
+      const minute = Math.floor((safe % 3600) / 60);
+      const second = safe % 60;
+      return {
+        hour: rawHour === 0 ? 12 : rawHour,
+        rawHour,
+        minute,
+        second
+      };
+    }
+
+    function totalFromParts(hour, minute, second) {
+      const rawHour = Number(hour) % 12;
+      return normalize(rawHour * 3600 + Number(minute) * 60 + Number(second));
+    }
+
+    function shortestForwardAngle(previous, next) {
+      if (previous === null) return next;
+      let target = next;
+      while (target < previous) {
+        target += 360;
+      }
+      return target;
+    }
+
+    function setHandsWithoutTransition(action) {
+      [els.hourHand, els.minuteHand, els.secondHand].forEach((hand) => {
+        hand.style.transition = "none";
+      });
+      action();
+      [els.hourHand, els.minuteHand, els.secondHand].forEach((hand) => {
+        hand.getBoundingClientRect();
+        hand.style.transition = "";
+      });
+    }
+
+    function pointOnClock(angleDeg, radius) {
+      const rad = (angleDeg - 90) * Math.PI / 180;
+      return {
+        x: Math.cos(rad) * radius,
+        y: Math.sin(rad) * radius
+      };
+    }
+
+    function makeLine(x1, y1, x2, y2, className) {
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", x1.toFixed(2));
+      line.setAttribute("y1", y1.toFixed(2));
+      line.setAttribute("x2", x2.toFixed(2));
+      line.setAttribute("y2", y2.toFixed(2));
+      line.setAttribute("class", className);
+      return line;
+    }
+
+    function makeText(x, y, text, className) {
+      const node = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      node.setAttribute("x", x.toFixed(2));
+      node.setAttribute("y", y.toFixed(2));
+      node.setAttribute("class", className);
+      node.textContent = text;
+      return node;
+    }
+
+    function buildClockFace() {
+      for (let i = 0; i < 60; i += 1) {
+        const angle = i * 6;
+        const outer = pointOnClock(angle, 144);
+        const inner = pointOnClock(angle, i % 5 === 0 ? 132 : 138);
+        if (i % 5 === 0) {
+          els.bigTicks.appendChild(makeLine(inner.x, inner.y, outer.x, outer.y, "tick-big"));
+        } else {
+          els.smallTicks.appendChild(makeLine(inner.x, inner.y, outer.x, outer.y, "tick-small"));
+        }
+      }
+
+      for (let n = 1; n <= 12; n += 1) {
+        const angle = n * 30;
+        const pos = pointOnClock(angle, 111);
+        els.hourNumbers.appendChild(makeText(pos.x, pos.y, n, "clock-number"));
+      }
+
+      for (let n = 5; n <= 60; n += 5) {
+        const angle = n * 6;
+        const pos = pointOnClock(angle, 91);
+        els.minuteNumbers.appendChild(makeText(pos.x, pos.y, n === 60 ? "60" : n, "minute-number"));
+      }
+    }
+
+    function timeText(parts = partsFromTotal()) {
+      return `${parts.hour}时${parts.minute}分${parts.second}秒`;
+    }
+
+    function thinkingSentence(parts = partsFromTotal()) {
+      const nextHour = parts.hour === 12 ? 1 : parts.hour + 1;
+      const minutePlace = parts.minute === 0 ? "正指向 12" : `走了 ${parts.minute} 小格`;
+      const secondPlace = parts.second === 0 ? "正指向 12" : `走了 ${parts.second} 小格`;
+      const hourText = parts.minute === 0 && parts.second === 0
+        ? `时针指着 ${parts.hour}`
+        : `时针过了 ${parts.hour}，还没到 ${nextHour}`;
+      return `我先看短短的时针，${hourText}，所以是 ${parts.hour} 时。再看长长的分针，它${minutePlace}，所以是 ${parts.minute} 分。最后看细细的秒针，它${secondPlace}，所以是 ${parts.second} 秒。`;
+    }
+
+    function updateClock(options = {}) {
+      const parts = partsFromTotal();
+      const secondDeg = parts.second * 6;
+      const minuteDeg = (parts.minute + parts.second / 60) * 6;
+      const hourDeg = (parts.rawHour + parts.minute / 60 + parts.second / 3600) * 30;
+      const jump = Boolean(options.jump);
+
+      const nextAngles = jump
+        ? { hour: hourDeg, minute: minuteDeg, second: secondDeg }
+        : {
+            hour: shortestForwardAngle(state.handAngles.hour, hourDeg),
+            minute: shortestForwardAngle(state.handAngles.minute, minuteDeg),
+            second: shortestForwardAngle(state.handAngles.second, secondDeg)
+          };
+
+      const applyHands = () => {
+        els.hourHand.style.transform = `rotate(${nextAngles.hour}deg)`;
+        els.minuteHand.style.transform = `rotate(${nextAngles.minute}deg)`;
+        els.secondHand.style.transform = `rotate(${nextAngles.second}deg)`;
+      };
+      if (jump) {
+        setHandsWithoutTransition(applyHands);
+      } else {
+        applyHands();
+      }
+      state.handAngles = nextAngles;
+
+      const minutePoint = pointOnClock(parts.minute * 6, 126);
+      const secondPoint = pointOnClock(secondDeg, 140);
+      els.minuteMarker.setAttribute("cx", minutePoint.x.toFixed(2));
+      els.minuteMarker.setAttribute("cy", minutePoint.y.toFixed(2));
+      els.secondMarker.setAttribute("cx", secondPoint.x.toFixed(2));
+      els.secondMarker.setAttribute("cy", secondPoint.y.toFixed(2));
+
+      els.digitalTime.textContent = `${pad(parts.hour)}:${pad(parts.minute)}:${pad(parts.second)}`;
+      els.hourRange.value = parts.hour;
+      els.minuteRange.value = parts.minute;
+      els.secondRange.value = parts.second;
+      els.hourOut.textContent = parts.hour;
+      els.minuteOut.textContent = parts.minute;
+      els.secondOut.textContent = parts.second;
+      els.thought.innerHTML = `<strong>读作：</strong>${timeText(parts)}<br><strong>想法：</strong>${thinkingSentence(parts)}`;
+    }
+
+    function setTime(hour, minute, second) {
+      stopTimer();
+      state.totalSeconds = totalFromParts(hour, minute, second);
+      updateClock({ jump: true });
+      resetChoiceStyle();
+    }
+
+    function addSeconds(amount, options = {}) {
+      state.totalSeconds = normalize(state.totalSeconds + amount);
+      updateClock(options);
+    }
+
+    function stopTimer() {
+      if (state.timer) {
+        clearInterval(state.timer);
+        state.timer = null;
+      }
+      state.live = false;
+      els.runStatus.textContent = "已停下";
+    }
+
+    function runSteps(stepSeconds, count, delay, doneText) {
+      stopTimer();
+      let left = count;
+      els.runStatus.textContent = "走动中";
+      state.timer = setInterval(() => {
+        addSeconds(stepSeconds);
+        left -= 1;
+        if (left <= 0) {
+          stopTimer();
+          els.feedback.textContent = doneText;
+          const teacherFeedback = document.getElementById("teacherFeedback");
+          if (teacherFeedback) teacherFeedback.textContent = doneText;
+        }
+      }, delay);
+    }
+
+    function startLive() {
+      stopTimer();
+      state.live = true;
+      els.runStatus.textContent = "真实走时";
+      const sync = () => {
+        const now = new Date();
+        state.totalSeconds = totalFromParts(now.getHours() % 12 || 12, now.getMinutes(), now.getSeconds());
+        updateClock({ jump: true });
+      };
+      sync();
+      state.timer = setInterval(sync, 1000);
+    }
+
+    function speak(text) {
+      if (!("speechSynthesis" in window)) {
+        els.feedback.textContent = "这个浏览器暂时不能朗读，可以请小朋友自己读一遍。";
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "zh-CN";
+      utterance.rate = 0.86;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function makeOptionAround(answer) {
+      const offsets = [300, -300, 60, -60, 1, -1, 3600, -3600];
+      const used = new Set();
+      const answerKey = partsLabel(partsFromTotal(answer));
+      used.add(answerKey);
+      const options = [answer];
+      for (const offset of offsets.sort(() => Math.random() - 0.5)) {
+        const value = normalize(answer + offset);
+        const key = partsLabel(partsFromTotal(value));
+        if (!used.has(key)) {
+          used.add(key);
+          options.push(value);
+        }
+        if (options.length === 4) break;
+      }
+      return options.sort(() => Math.random() - 0.5);
+    }
+
+    function partsLabel(parts) {
+      return `${parts.hour}:${pad(parts.minute)}:${pad(parts.second)}`;
+    }
+
+    function resetChoiceStyle() {
+      [...els.choices.querySelectorAll(".choice-button")].forEach((button) => {
+        button.classList.remove("correct", "wrong");
+        button.removeAttribute("aria-current");
+      });
+    }
+
+    function newQuiz() {
+      stopTimer();
+      const hour = randomInt(1, 12);
+      const minute = randomInt(0, 11) * 5;
+      const second = randomInt(0, 11) * 5;
+      state.quizAnswer = totalFromParts(hour, minute, second);
+      state.totalSeconds = state.quizAnswer;
+      updateClock({ jump: true });
+      els.feedback.textContent = "先看短针，再看长针，最后看细针。";
+      els.thinkingText.value = "我先看短短的时针，再看长长的分针，最后看细细的秒针。";
+      els.fillThinkingBtn.disabled = true;
+      els.fillThinkingBtn.setAttribute("aria-disabled", "true");
+      els.choices.innerHTML = "";
+
+      makeOptionAround(state.quizAnswer).forEach((value) => {
+        const button = document.createElement("button");
+        const parts = partsFromTotal(value);
+        button.className = "choice-button";
+        button.type = "button";
+        button.textContent = timeText(parts);
+        button.dataset.value = String(value);
+        button.addEventListener("click", () => checkAnswer(button, value));
+        els.choices.appendChild(button);
+      });
+    }
+
+    function checkAnswer(button, value) {
+      resetChoiceStyle();
+      const correct = value === state.quizAnswer;
+      button.classList.add(correct ? "correct" : "wrong");
+      button.setAttribute("aria-current", "true");
+      const parts = partsFromTotal(state.quizAnswer);
+      if (correct) {
+        els.feedback.textContent = `答对了！这个钟面是 ${timeText(parts)}。`;
+        els.thinkingText.value = thinkingSentence(parts);
+        els.fillThinkingBtn.disabled = false;
+        els.fillThinkingBtn.removeAttribute("aria-disabled");
+      } else {
+        const correctButton = [...els.choices.querySelectorAll(".choice-button")]
+          .find((item) => Number(item.dataset.value) === state.quizAnswer);
+        if (correctButton) correctButton.classList.add("correct");
+        els.feedback.textContent = `再看一看：正确时间是 ${timeText(parts)}。`;
+      }
+    }
+
+    function switchMode(mode) {
+      state.currentMode = mode;
+      document.body.dataset.mode = mode;
+      document.querySelectorAll(".mode-tab").forEach((tab) => {
+        tab.setAttribute("aria-pressed", String(tab.dataset.mode === mode));
+      });
+      if (mode === "learn") {
+        stopTimer();
+        els.fillThinkingBtn.disabled = false;
+        els.fillThinkingBtn.removeAttribute("aria-disabled");
+        els.feedback.textContent = "复习：时针看大格，分针和秒针看小格。";
+      }
+      if (mode === "set") {
+        stopTimer();
+        els.fillThinkingBtn.disabled = false;
+        els.fillThinkingBtn.removeAttribute("aria-disabled");
+        els.feedback.textContent = "拨动上面的三个滑块，钟面会跟着变化。";
+      }
+      if (mode === "quiz") {
+        newQuiz();
+      }
+    }
+
+    buildClockFace();
+    updateClock({ jump: true });
+
+    document.querySelectorAll(".mode-tab").forEach((tab) => {
+      tab.addEventListener("click", () => switchMode(tab.dataset.mode));
+    });
+
+    [els.hourRange, els.minuteRange, els.secondRange].forEach((input) => {
+      input.addEventListener("input", () => {
+        setTime(els.hourRange.value, els.minuteRange.value, els.secondRange.value);
+      });
+    });
+
+    document.getElementById("addHourBtn").addEventListener("click", () => {
+      stopTimer();
+      addSeconds(3600);
+      els.feedback.textContent = "时针走了 1 大格，时间增加 1 时。";
+      const freeFeedback = document.getElementById("freeFeedback");
+      if (freeFeedback) freeFeedback.textContent = "时针走了 1 大格，时间增加 1 时。";
+    });
+
+    document.getElementById("addMinuteBtn").addEventListener("click", () => {
+      stopTimer();
+      addSeconds(60);
+      els.feedback.textContent = "分针走了 1 小格，时间增加 1 分。";
+      const freeFeedback = document.getElementById("freeFeedback");
+      if (freeFeedback) freeFeedback.textContent = "分针走了 1 小格，时间增加 1 分。";
+    });
+
+    document.getElementById("addSecondBtn").addEventListener("click", () => {
+      stopTimer();
+      addSeconds(1);
+      els.feedback.textContent = "秒针走了 1 小格，时间增加 1 秒。";
+      const freeFeedback = document.getElementById("freeFeedback");
+      if (freeFeedback) freeFeedback.textContent = "秒针走了 1 小格，时间增加 1 秒。";
+    });
+
+    document.getElementById("demoSecondBtn").addEventListener("click", () => {
+      runSteps(1, 60, 40, "秒针走一圈，分针正好走 1 小格：1 分 = 60 秒。");
+    });
+
+    document.getElementById("demoMinuteBtn").addEventListener("click", () => {
+      runSteps(60, 60, 45, "分针走一圈，时针正好走 1 大格：1 时 = 60 分。");
+    });
+
+    document.getElementById("liveBtn").addEventListener("click", () => {
+      if (state.live) {
+        stopTimer();
+      } else {
+        startLive();
+      }
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      setTime(3, 15, 20);
+      els.feedback.textContent = "已经回到 3时15分20秒。";
+      const teacherFeedback = document.getElementById("teacherFeedback");
+      const freeFeedback = document.getElementById("freeFeedback");
+      if (teacherFeedback) teacherFeedback.textContent = "已经回到 3时15分20秒。";
+      if (freeFeedback) freeFeedback.textContent = "已经回到 3时15分20秒。";
+    });
+
+    document.getElementById("newQuizBtn").addEventListener("click", newQuiz);
+
+    document.getElementById("fillThinkingBtn").addEventListener("click", () => {
+      els.thinkingText.value = thinkingSentence(partsFromTotal());
+      els.feedback.textContent = "已经把观察顺序填好了，可以请小朋友读一读。";
+    });
+
+    document.getElementById("readThinkingBtn").addEventListener("click", () => {
+      speak(els.thinkingText.value);
+    });
+
+    document.getElementById("speakBtn").addEventListener("click", () => {
+      const parts = partsFromTotal();
+      speak(`现在是${timeText(parts)}。${thinkingSentence(parts)}`);
+    });
+
+    window.addEventListener("beforeunload", stopTimer);
+  </script>
+  <script>
+    (() => {
+      const QUESTION_TOTAL = 5;
+      const levelNames = {
+        hour: "整时",
+        minute: "几时几分",
+        second: "时分秒",
+        tricky: "易错题",
+        custom: "自由拨钟"
+      };
+      const trickyTimes = [
+        [6, 55, 0],
+        [7, 50, 0],
+        [10, 45, 0],
+        [11, 55, 0],
+        [11, 59, 0],
+        [12, 0, 0],
+        [12, 5, 0],
+        [1, 55, 30]
+      ];
+
+      const app = {
+        mode: "teacher",
+        answerVisible: true,
+        visibleHands: { hour: true, minute: true, second: true },
+        selectedLevel: "hour",
+        currentQuestion: null,
+        currentSource: null,
+        session: {
+          level: "hour",
+          total: QUESTION_TOTAL,
+          index: 0,
+          correct: 0,
+          answered: 0,
+          questions: [],
+          completed: false
+        },
+        mistakes: [],
+        mistakeQueue: [],
+        mistakeIndex: 0
+      };
+
+      const ui = {
+        body: document.body,
+        answerToggleBtn: document.getElementById("answerToggleBtn"),
+        hourHandToggleBtn: document.getElementById("hourHandToggleBtn"),
+        minuteHandToggleBtn: document.getElementById("minuteHandToggleBtn"),
+        secondHandToggleBtn: document.getElementById("secondHandToggleBtn"),
+        teacherFeedback: document.getElementById("teacherFeedback"),
+        freeQuestionArea: document.getElementById("freeQuestionArea"),
+        freeChoices: document.getElementById("freeChoices"),
+        freeFeedback: document.getElementById("freeFeedback"),
+        makeFreeQuestionBtn: document.getElementById("makeFreeQuestionBtn"),
+        showFreeAnswerBtn: document.getElementById("showFreeAnswerBtn"),
+        progressPill: document.getElementById("progressPill"),
+        correctCount: document.getElementById("correctCount"),
+        accuracyText: document.getElementById("accuracyText"),
+        mistakeCount: document.getElementById("mistakeCount"),
+        practiceQuestionText: document.getElementById("practiceQuestionText"),
+        practiceChoices: document.getElementById("practiceChoices"),
+        practiceFeedback: document.getElementById("practiceFeedback"),
+        startPracticeBtn: document.getElementById("startPracticeBtn"),
+        nextQuestionBtn: document.getElementById("nextQuestionBtn"),
+        showPracticeAnswerBtn: document.getElementById("showPracticeAnswerBtn"),
+        restartPracticeBtn: document.getElementById("restartPracticeBtn"),
+        mistakePill: document.getElementById("mistakePill"),
+        mistakeList: document.getElementById("mistakeList"),
+        mistakePracticeArea: document.getElementById("mistakePracticeArea"),
+        mistakeChoices: document.getElementById("mistakeChoices"),
+        mistakeFeedback: document.getElementById("mistakeFeedback"),
+        startMistakesBtn: document.getElementById("startMistakesBtn"),
+        clearMistakesBtn: document.getElementById("clearMistakesBtn")
+      };
+
+      function setMode(mode) {
+        stopTimer();
+        app.mode = mode;
+        ui.body.dataset.mode = mode;
+        document.querySelectorAll(".mode-tab").forEach((tab) => {
+          tab.setAttribute("aria-pressed", String(tab.dataset.mode === mode));
+        });
+        clearQuestionSelection();
+
+        if (mode === "teacher") {
+          setAnswerVisible(app.answerVisible);
+          ui.teacherFeedback.textContent = "可隐藏答案或某根指针，分步讲清时、分、秒。";
+        }
+        if (mode === "free") {
+          setAnswerVisible(true);
+          ui.freeFeedback.textContent = "拨一个时间后，可以生成题目让学生回答。";
+        }
+        if (mode === "practice") {
+          setAnswerVisible(false);
+          ui.practiceFeedback.textContent = "每轮 5 题，答题前会隐藏答案。";
+          updatePracticeStats();
+        }
+        if (mode === "mistakes") {
+          setAnswerVisible(false);
+          renderMistakeList();
+        }
+      }
+
+      function setAnswerVisible(visible) {
+        app.answerVisible = visible;
+        ui.body.classList.toggle("answer-hidden", !visible);
+        ui.answerToggleBtn.textContent = visible ? "隐藏答案" : "显示答案";
+        ui.answerToggleBtn.setAttribute("aria-pressed", String(visible));
+      }
+
+      function toggleHand(hand) {
+        app.visibleHands[hand] = !app.visibleHands[hand];
+        ui.body.classList.toggle(`hide-${hand}`, !app.visibleHands[hand]);
+        const button = {
+          hour: ui.hourHandToggleBtn,
+          minute: ui.minuteHandToggleBtn,
+          second: ui.secondHandToggleBtn
+        }[hand];
+        button.setAttribute("aria-pressed", String(app.visibleHands[hand]));
+      }
+
+      function makeId() {
+        return `q-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      }
+
+      function questionFromParts(hour, minute, second, type = "custom") {
+        const total = totalFromParts(hour, minute, second);
+        const parts = partsFromTotal(total);
+        const answer = timeText(parts);
+        return {
+          id: makeId(),
+          type,
+          totalSeconds: total,
+          answerText: answer,
+          options: optionTextsFor(total),
+          explanation: thinkingSentence(parts)
+        };
+      }
+
+      function optionTextsFor(total) {
+        const offsets = [0, 300, -300, 60, -60, 1, -1, 3600, -3600, 600, -600];
+        const used = new Set();
+        const options = [];
+        offsets.sort(() => Math.random() - 0.5).forEach((offset) => {
+          if (options.length >= 4) return;
+          const candidate = normalize(total + offset);
+          const label = timeText(partsFromTotal(candidate));
+          if (!used.has(label)) {
+            used.add(label);
+            options.push(label);
+          }
+        });
+        while (options.length < 4) {
+          const fallback = totalFromParts(randomInt(1, 12), randomInt(0, 11) * 5, randomInt(0, 11) * 5);
+          const label = timeText(partsFromTotal(fallback));
+          if (!used.has(label)) {
+            used.add(label);
+            options.push(label);
+          }
+        }
+        return options.sort(() => Math.random() - 0.5);
+      }
+
+      function generateQuestion(level) {
+        if (level === "hour") {
+          return questionFromParts(randomInt(1, 12), 0, 0, "hour");
+        }
+        if (level === "minute") {
+          return questionFromParts(randomInt(1, 12), randomInt(0, 11) * 5, 0, "minute");
+        }
+        if (level === "second") {
+          return questionFromParts(randomInt(1, 12), randomInt(0, 11) * 5, randomInt(0, 11) * 5, "second");
+        }
+        const picked = trickyTimes[randomInt(0, trickyTimes.length - 1)];
+        return questionFromParts(picked[0], picked[1], picked[2], "tricky");
+      }
+
+      function showQuestion(question, source) {
+        app.currentQuestion = question;
+        app.currentSource = source;
+        state.totalSeconds = question.totalSeconds;
+        updateClock({ jump: true });
+        setAnswerVisible(false);
+        els.thinkingText.value = "我先看短短的时针，再看长长的分针，最后看细细的秒针。";
+        renderChoices(question, source);
+      }
+
+      function renderChoices(question, source) {
+        const container = source === "free"
+          ? ui.freeChoices
+          : source === "mistake"
+            ? ui.mistakeChoices
+            : ui.practiceChoices;
+        container.innerHTML = "";
+        question.options.forEach((option) => {
+          const button = document.createElement("button");
+          button.className = "choice-button";
+          button.type = "button";
+          button.textContent = option;
+          button.addEventListener("click", () => answerQuestion(option, button, source));
+          container.appendChild(button);
+        });
+      }
+
+      function clearQuestionSelection() {
+        [ui.freeChoices, ui.practiceChoices, ui.mistakeChoices].forEach((container) => {
+          container.querySelectorAll(".choice-button").forEach((button) => {
+            button.classList.remove("correct", "wrong");
+            button.disabled = false;
+            button.removeAttribute("aria-current");
+          });
+        });
+      }
+
+      function answerQuestion(option, button, source) {
+        if (!app.currentQuestion) return;
+        const correct = option === app.currentQuestion.answerText;
+        const container = button.parentElement;
+        container.querySelectorAll(".choice-button").forEach((item) => {
+          item.disabled = true;
+          if (item.textContent === app.currentQuestion.answerText) item.classList.add("correct");
+        });
+        button.classList.add(correct ? "correct" : "wrong");
+        button.setAttribute("aria-current", "true");
+        if (!correct) addMistake(app.currentQuestion);
+
+        if (source === "free") handleFreeAnswer(correct);
+        if (source === "practice") handlePracticeAnswer(correct);
+        if (source === "mistake") handleMistakeAnswer(correct);
+      }
+
+      function handleFreeAnswer(correct) {
+        if (correct) {
+          setAnswerVisible(true);
+          els.thinkingText.value = app.currentQuestion.explanation;
+          ui.freeFeedback.textContent = `答对了！这个钟面是 ${app.currentQuestion.answerText}。`;
+        } else {
+          ui.freeFeedback.textContent = "再看一看：短针过了几？长针走了几个小格？";
+        }
+        renderMistakeList();
+      }
+
+      function handlePracticeAnswer(correct) {
+        app.session.answered += 1;
+        if (correct) app.session.correct += 1;
+        ui.nextQuestionBtn.disabled = false;
+        ui.showPracticeAnswerBtn.disabled = false;
+        ui.practiceFeedback.textContent = correct
+          ? "答对了！你先看时针，再看分针，思路很清楚。"
+          : "再看一看：短针过了几？长针走了几个小格？";
+        if (correct) {
+          setAnswerVisible(true);
+          els.thinkingText.value = app.currentQuestion.explanation;
+        }
+        updatePracticeStats();
+        renderMistakeList();
+      }
+
+      function handleMistakeAnswer(correct) {
+        if (correct) {
+          removeMistake(app.currentQuestion.id);
+          setAnswerVisible(true);
+          els.thinkingText.value = app.currentQuestion.explanation;
+          ui.mistakeFeedback.textContent = "这道错题已经答对，已从错题区移除。";
+        } else {
+          ui.mistakeFeedback.textContent = "再观察一次：先看短针，再看长针。";
+        }
+        renderMistakeList();
+      }
+
+      function addMistake(question) {
+        if (app.mistakes.some((item) => item.id === question.id || item.answerText === question.answerText)) return;
+        app.mistakes.push({ ...question });
+      }
+
+      function removeMistake(id) {
+        app.mistakes = app.mistakes.filter((item) => item.id !== id);
+      }
+
+      function startPractice() {
+        stopTimer();
+        app.session = {
+          level: app.selectedLevel,
+          total: QUESTION_TOTAL,
+          index: 0,
+          correct: 0,
+          answered: 0,
+          questions: Array.from({ length: QUESTION_TOTAL }, () => generateQuestion(app.selectedLevel)),
+          completed: false
+        };
+        ui.nextQuestionBtn.disabled = true;
+        ui.showPracticeAnswerBtn.disabled = true;
+        showPracticeQuestion();
+      }
+
+      function showPracticeQuestion() {
+        const question = app.session.questions[app.session.index];
+        if (!question) {
+          completePractice();
+          return;
+        }
+        ui.practiceQuestionText.textContent = `${levelNames[app.session.level]} 第 ${app.session.index + 1} 题：看钟面，选出正确时间。`;
+        ui.practiceFeedback.textContent = "先看短短的时针，再看长长的分针，最后看细细的秒针。";
+        ui.nextQuestionBtn.disabled = true;
+        ui.showPracticeAnswerBtn.disabled = true;
+        showQuestion(question, "practice");
+        updatePracticeStats();
+      }
+
+      function nextPracticeQuestion() {
+        if (app.session.index + 1 >= app.session.total) {
+          completePractice();
+          return;
+        }
+        app.session.index += 1;
+        showPracticeQuestion();
+      }
+
+      function completePractice() {
+        app.session.completed = true;
+        app.currentQuestion = null;
+        setAnswerVisible(true);
+        ui.practiceChoices.innerHTML = "";
+        ui.nextQuestionBtn.disabled = true;
+        ui.showPracticeAnswerBtn.disabled = true;
+        const accuracy = app.session.total ? Math.round(app.session.correct / app.session.total * 100) : 0;
+        ui.practiceQuestionText.textContent = "本轮练习完成！";
+        ui.practiceFeedback.textContent = `完成 ${app.session.total} 题，答对 ${app.session.correct} 题，正确率 ${accuracy}%。${summaryText(accuracy)}`;
+        updatePracticeStats();
+      }
+
+      function summaryText(accuracy) {
+        if (accuracy >= 90) return "太棒了，你已经能熟练读出钟面时间了！";
+        if (accuracy >= 70) return "不错，再练一练接近下一个小时的题会更稳。";
+        return "别着急，先记住：先看短针，再看长针。";
+      }
+
+      function updatePracticeStats() {
+        const total = app.session.total || QUESTION_TOTAL;
+        const current = app.session.completed ? total : Math.min(app.session.index + 1, total);
+        const accuracy = app.session.answered ? Math.round(app.session.correct / app.session.answered * 100) : 0;
+        ui.progressPill.textContent = `${current}/${total}`;
+        ui.correctCount.textContent = String(app.session.correct);
+        ui.accuracyText.textContent = `${accuracy}%`;
+        ui.mistakeCount.textContent = String(app.mistakes.length);
+        ui.mistakePill.textContent = `${app.mistakes.length}题`;
+      }
+
+      function showPracticeAnswer() {
+        if (!app.currentQuestion) return;
+        setAnswerVisible(true);
+        els.thinkingText.value = app.currentQuestion.explanation;
+        ui.practiceFeedback.textContent = `正确答案是 ${app.currentQuestion.answerText}。${app.currentQuestion.explanation}`;
+      }
+
+      function makeFreeQuestion() {
+        const parts = partsFromTotal();
+        const question = questionFromParts(parts.hour, parts.minute, parts.second, "custom");
+        ui.freeQuestionArea.classList.remove("hidden");
+        ui.freeFeedback.textContent = "题目已生成。答题前已隐藏答案。";
+        showQuestion(question, "free");
+      }
+
+      function showFreeAnswer() {
+        const parts = partsFromTotal();
+        setAnswerVisible(true);
+        els.thinkingText.value = thinkingSentence(parts);
+        ui.freeFeedback.textContent = `当前钟面是 ${timeText(parts)}。`;
+      }
+
+      function renderMistakeList() {
+        updatePracticeStats();
+        if (app.mistakes.length === 0) {
+          ui.mistakeList.textContent = "这轮没有错题，继续保持！";
+          ui.mistakePracticeArea.classList.add("hidden");
+          return;
+        }
+        ui.mistakeList.innerHTML = app.mistakes
+          .map((item, index) => `<span class="mistake-chip">${index + 1}. ${levelNames[item.type] || "练习"}：${item.answerText}</span>`)
+          .join("");
+      }
+
+      function startMistakePractice() {
+        if (app.mistakes.length === 0) {
+          ui.mistakeFeedback.textContent = "这轮没有错题，继续保持！";
+          return;
+        }
+        app.mistakeQueue = [...app.mistakes];
+        app.mistakeIndex = 0;
+        ui.mistakePracticeArea.classList.remove("hidden");
+        showMistakeQuestion();
+      }
+
+      function showMistakeQuestion() {
+        if (app.mistakeIndex >= app.mistakeQueue.length || app.mistakes.length === 0) {
+          app.currentQuestion = null;
+          ui.mistakeChoices.innerHTML = "";
+          ui.mistakeFeedback.textContent = "错题再练完成。";
+          renderMistakeList();
+          return;
+        }
+        const question = app.mistakeQueue[app.mistakeIndex];
+        app.mistakeIndex += 1;
+        ui.mistakeFeedback.textContent = "重新观察钟面，选出正确时间。";
+        showQuestion(question, "mistake");
+      }
+
+      function clearMistakes() {
+        app.mistakes = [];
+        app.mistakeQueue = [];
+        app.mistakeIndex = 0;
+        ui.mistakeChoices.innerHTML = "";
+        ui.mistakeFeedback.textContent = "错题已清空。";
+        renderMistakeList();
+      }
+
+      function wireEnhancedControls() {
+        document.querySelectorAll(".mode-tab").forEach((tab) => {
+          tab.addEventListener("click", (event) => {
+            event.stopImmediatePropagation();
+            setMode(tab.dataset.mode);
+          }, true);
+        });
+
+        document.querySelectorAll(".level-button").forEach((button) => {
+          button.addEventListener("click", () => {
+            app.selectedLevel = button.dataset.level;
+            document.querySelectorAll(".level-button").forEach((item) => item.classList.toggle("active", item === button));
+            ui.practiceFeedback.textContent = `已选择${levelNames[app.selectedLevel]}，点击开始练习。`;
+          });
+        });
+
+        ui.answerToggleBtn.addEventListener("click", () => setAnswerVisible(!app.answerVisible));
+        ui.hourHandToggleBtn.addEventListener("click", () => toggleHand("hour"));
+        ui.minuteHandToggleBtn.addEventListener("click", () => toggleHand("minute"));
+        ui.secondHandToggleBtn.addEventListener("click", () => toggleHand("second"));
+        ui.makeFreeQuestionBtn.addEventListener("click", makeFreeQuestion);
+        ui.showFreeAnswerBtn.addEventListener("click", showFreeAnswer);
+        ui.startPracticeBtn.addEventListener("click", startPractice);
+        ui.restartPracticeBtn.addEventListener("click", startPractice);
+        ui.nextQuestionBtn.addEventListener("click", nextPracticeQuestion);
+        ui.showPracticeAnswerBtn.addEventListener("click", showPracticeAnswer);
+        ui.startMistakesBtn.addEventListener("click", startMistakePractice);
+        ui.clearMistakesBtn.addEventListener("click", clearMistakes);
+
+        document.getElementById("demoSecondBtn").addEventListener("click", () => {
+          ui.teacherFeedback.textContent = "秒针走一圈，观察分针怎样变化。";
+        });
+        document.getElementById("demoMinuteBtn").addEventListener("click", () => {
+          ui.teacherFeedback.textContent = "分针走一圈，观察时针怎样变化。";
+        });
+      }
+
+      wireEnhancedControls();
+      state.totalSeconds = 3 * 3600 + 15 * 60 + 20;
+      updateClock({ jump: true });
+      ui.body.dataset.mode = "teacher";
+      document.querySelectorAll(".mode-tab").forEach((tab) => {
+        tab.setAttribute("aria-pressed", String(tab.dataset.mode === "teacher"));
+      });
+      setAnswerVisible(true);
+      renderMistakeList();
+      updatePracticeStats();
+    })();
+  </script>
+</body>
+</html>
